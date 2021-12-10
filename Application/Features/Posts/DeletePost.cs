@@ -14,6 +14,8 @@ namespace Application.Features.Posts
 	public class DeletePostCommand : IRequest<bool>
 	{
 		public int Id { get; set; }
+
+		public int PosterId { get; set; }
 	}
 
 	public class DeletePostCommandHandler : IRequestHandler<DeletePostCommand, bool>
@@ -29,7 +31,7 @@ namespace Application.Features.Posts
 		public async Task<bool> Handle(DeletePostCommand request, CancellationToken cancellationToken)
 		{
 
-			var post = await _context.Posts.Where(p => p.Id == request.Id).FirstOrDefaultAsync();
+			var post = await _context.Posts.Where(p => p.Id == request.Id && p.PosterId == request.PosterId).FirstOrDefaultAsync();
 
 			if (post != null)
 			{

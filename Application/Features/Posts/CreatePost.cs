@@ -3,6 +3,7 @@ using Domain.Entities;
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -19,14 +20,20 @@ namespace Application.Features.Posts
 			UploadDate = DateTime.UtcNow;
 		}
 
+		[Required]
 		public int PosterId { get; set; }
 
+		[Required]
+		[StringLength(int.MaxValue, MinimumLength = 1)]
 		public string Title { get; set; }
 
+		[Required]
+		[StringLength(int.MaxValue, MinimumLength = 1)]
 		public string Body { get; set; }
 
-		public int GameId { get; set; }
+		public int? GameId { get; set; }
 
+		[Required]
 		public DateTime UploadDate { get; private set; }
 
 		public List<Comment> Comments { get; set; }
@@ -56,7 +63,7 @@ namespace Application.Features.Posts
 				UploadDate = DateTime.UtcNow
 			};
 
-			_context.Posts.Add(entity);
+			await _context.Posts.AddAsync(entity);
 
 			await _context.SaveChangesAsync(cancellationToken);
 

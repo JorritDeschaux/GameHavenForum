@@ -1,6 +1,7 @@
 ﻿using Application.Persistence.Infrastructure;
 using Domain.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace Application.Features.Posts
 
 		public async Task<List<Post>> Handle(GetAllPostsCommand request, CancellationToken cancellationToken)
 		{
-			var posts = _context.Posts.ToList();
+			var posts = await _context.Posts.ToListAsync();
 
 			foreach (var post in posts)
 			{

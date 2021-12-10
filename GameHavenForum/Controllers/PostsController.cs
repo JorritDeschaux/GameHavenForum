@@ -27,30 +27,9 @@ namespace GameHavenForum.Controllers
 			_context = context;
 		}
 
-		[HttpGet]
-		public IActionResult GetPosts()
-		{
-
-			var posts = _mediator.Send(new GetAllPostsCommand { });
-			return posts != null ? Ok(posts) : NotFound();
-
-		}
-
-		[HttpGet("{id}")]
-		public IActionResult GetPostById(int id)
-		{
-
-			var post = _mediator.Send(new GetPostCommand { Id = id });
-			return post != null ? Ok(post) : NotFound();
-
-		}
-
-		[HttpPost("create")]
-		public async Task<IActionResult> CreatePost([FromBody] Post newPost)
+		private async Task<int> GetUserId(string jwt)
 		{
 			int userId;
-
-			var jwt =  Request.Headers["Authorization"];
 
 			using (var client = new HttpClient())
 			{
@@ -61,7 +40,7 @@ namespace GameHavenForum.Controllers
 				var response = client.GetAsync("api/auth/userIdByToken");
 				response.Wait();
 
-				if(response.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized) { return Unauthorized(); }
+				if (response.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized) { return 0; }
 
 				var jsonString = await response.Result.Content.ReadAsStringAsync();
 				userId = JsonConvert.DeserializeObject<int>(jsonString);
@@ -69,20 +48,61 @@ namespace GameHavenForum.Controllers
 				client.Dispose();
 			}
 
-			var result = _mediator.Send(new CreatePostCommand
-			{
-				Title = newPost.Title,
-				Body = newPost.Body,
-				PosterId = userId
-			});
+			return userId;
+		}
 
-			return result != null ? Ok(result) : BadRequest();
+		[HttpGet]
+		public async Task<IActionResult> GetPosts()
+		{
+
+			var posts = await _mediator.Send(new GetAllPostsCommand { });
+			return posts != null ? Ok(posts) : NotFound();
+
+		}
+
+		[HttpGet("{id}")]
+		public async Task<IActionResult> GetPostById(int id)
+		{
+
+			var post = await _mediator.Send(new GetPostCommand { Id = id });
+			return post != null ? Ok(post) : NotFound();
+
+		}
+
+		[HttpPost("create")]
+		public async Task<IActionResult> CreatePost([FromBody] Post newPost)
+		{
+			var jwt = Request.Headers["Authorization"];
+
+			int userId = await GetUserId(jwt);
+
+			try
+			{
+				var result = await _mediator.Send(new CreatePostCommand
+				{
+					Title = newPost.Title,
+					Body = newPost.Body,
+					PosterId = userId,
+					GameId = newPost.GameId
+				});
+
+				return Ok(result);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex);
+				throw;
+			}	
 		}
 
 		[HttpDelete("delete/{id}")]
 		public async Task<IActionResult> DeletePost(int id)
 		{
-			var result = _mediator.Send(new DeletePostCommand { Id = id}).Result;
+			var jwt = Request.Headers["Authorization"];
+
+			int userId = await GetUserId(jwt);
+
+			var result = await _mediator.Send(new DeletePostCommand { Id = id, PosterId = userId});
 			return result == true ? Ok(result) : BadRequest();
 		}
 

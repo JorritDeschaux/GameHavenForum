@@ -19,7 +19,7 @@ namespace Domain.Entities
 
 		public string Body { get; set; }
 
-		public List<Picture> Pictures { get; set; }
+		public int? GameId { get; set; }
 
 		public List<Comment> Comments { get; set; }
 

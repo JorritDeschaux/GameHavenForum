@@ -1,5 +1,4 @@
-﻿using Application.Entities;
-using Application.Features.Posts;
+﻿using Application.Features.Posts;
 using Application.Persistence.Infrastructure;
 using Domain.Entities;
 using MediatR;
@@ -28,6 +27,15 @@ namespace GameHavenForum.Controllers
 			_context = context;
 		}
 
+		[HttpGet]
+		public IActionResult GetPosts()
+		{
+
+			var posts = _mediator.Send(new GetAllPostsCommand { });
+			return posts != null ? Ok(posts) : NotFound();
+
+		}
+
 		[HttpGet("{id}")]
 		public IActionResult GetPostById(int id)
 		{
@@ -40,7 +48,7 @@ namespace GameHavenForum.Controllers
 		[HttpPost("create")]
 		public async Task<IActionResult> CreatePost([FromBody] Post newPost)
 		{
-			User user = new User();
+			int userId;
 
 			var jwt =  Request.Headers["Authorization"];
 
@@ -50,13 +58,13 @@ namespace GameHavenForum.Controllers
 				client.DefaultRequestHeaders.Accept.Clear();
 				client.DefaultRequestHeaders.Add("Authorization", jwt.ToString());
 
-				var response = client.GetAsync("api/auth/verify");
+				var response = client.GetAsync("api/auth/userIdByToken");
 				response.Wait();
 
-				if (response == null) { return Unauthorized(); }
+				if(response.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized) { return Unauthorized(); }
 
 				var jsonString = await response.Result.Content.ReadAsStringAsync();
-				user = JsonConvert.DeserializeObject<User>(jsonString);
+				userId = JsonConvert.DeserializeObject<int>(jsonString);
 
 				client.Dispose();
 			}
@@ -65,10 +73,17 @@ namespace GameHavenForum.Controllers
 			{
 				Title = newPost.Title,
 				Body = newPost.Body,
-				PosterId = user.Id
+				PosterId = userId
 			});
 
 			return result != null ? Ok(result) : BadRequest();
+		}
+
+		[HttpDelete("delete/{id}")]
+		public async Task<IActionResult> DeletePost(int id)
+		{
+			var result = _mediator.Send(new DeletePostCommand { Id = id}).Result;
+			return result == true ? Ok(result) : BadRequest();
 		}
 
 	}

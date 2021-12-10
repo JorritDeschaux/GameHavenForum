@@ -16,7 +16,6 @@ namespace Application.Features.Posts
 		public CreatePostCommand()
 		{
 			Comments = new List<Comment>();
-			Pictures = new List<Picture>();
 			UploadDate = DateTime.UtcNow;
 		}
 
@@ -26,9 +25,9 @@ namespace Application.Features.Posts
 
 		public string Body { get; set; }
 
-		public DateTime UploadDate { get; private set; }
+		public int GameId { get; set; }
 
-		public List<Picture> Pictures { get; set; }
+		public DateTime UploadDate { get; private set; }
 
 		public List<Comment> Comments { get; set; }
 
@@ -52,8 +51,9 @@ namespace Application.Features.Posts
 				PosterId = request.PosterId,
 				Title = request.Title,
 				Body = request.Body,
-				Pictures = request.Pictures,
 				Comments = request.Comments,
+				GameId = request.GameId,
+				UploadDate = DateTime.UtcNow
 			};
 
 			_context.Posts.Add(entity);

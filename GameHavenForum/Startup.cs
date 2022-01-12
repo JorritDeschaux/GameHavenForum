@@ -37,6 +37,17 @@ namespace GameHavenForum
 			{
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "GameHavenForum", Version = "v1" });
 			});
+
+			services.AddCors(options =>
+			{
+				options.AddDefaultPolicy(builder =>
+				{
+					builder.WithOrigins("http://localhost:3000");
+					builder.AllowAnyHeader();
+					builder.AllowAnyMethod();
+					builder.AllowCredentials();
+				});
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +59,8 @@ namespace GameHavenForum
 				app.UseSwagger();
 				app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "GameHavenForum v1"));
 			}
+
+			app.UseCors();
 
 			app.UseRouting();
 

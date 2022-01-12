@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace GameHavenForum.Controllers
 {
+
 	[Route("api/posts")]
 	[ApiController]
 	public class PostsController : ControllerBase
@@ -25,30 +26,6 @@ namespace GameHavenForum.Controllers
 		{
 			_mediator = mediator;
 			_context = context;
-		}
-
-		private async Task<int> GetUserId(string jwt)
-		{
-			int userId;
-
-			using (var client = new HttpClient())
-			{
-				client.BaseAddress = new Uri("http://host.docker.internal:5000");
-				client.DefaultRequestHeaders.Accept.Clear();
-				client.DefaultRequestHeaders.Add("Authorization", jwt.ToString());
-
-				var response = client.GetAsync("api/auth/userIdByToken");
-				response.Wait();
-
-				if (response.Result.StatusCode == System.Net.HttpStatusCode.Unauthorized) { return 0; }
-
-				var jsonString = await response.Result.Content.ReadAsStringAsync();
-				userId = JsonConvert.DeserializeObject<int>(jsonString);
-
-				client.Dispose();
-			}
-
-			return userId;
 		}
 
 		[HttpGet]
@@ -74,7 +51,7 @@ namespace GameHavenForum.Controllers
 		{
 			var jwt = Request.Headers["Authorization"];
 
-			int userId = await GetUserId(jwt);
+			int userId = await UserHelper.GetUserId(jwt);
 
 			try
 			{
@@ -100,7 +77,7 @@ namespace GameHavenForum.Controllers
 		{
 			var jwt = Request.Headers["Authorization"];
 
-			int userId = await GetUserId(jwt);
+			int userId = await UserHelper.GetUserId(jwt);
 
 			var result = await _mediator.Send(new DeletePostCommand { Id = id, PosterId = userId});
 			return result == true ? Ok(result) : BadRequest();
